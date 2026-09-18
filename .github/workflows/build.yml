@@ -211,11 +211,11 @@ jobs:
       - name: Create temporary release keystore
         run: |
           STORE_PASS=$(openssl rand -hex 16)
-          KEY_PASS=$(openssl rand -hex 16)
           keytool -genkeypair -v \
             -keystore flowpay-release.jks \
+            -storetype JKS \
             -storepass "$STORE_PASS" \
-            -keypass "$KEY_PASS" \
+            -keypass "$STORE_PASS" \
             -keyalg RSA \
             -keysize 2048 \
             -validity 10000 \
@@ -226,7 +226,7 @@ jobs:
           storeFile=$GITHUB_WORKSPACE/flowpay-release.jks
           storePassword=$STORE_PASS
           keyAlias=flowpay
-          keyPassword=$KEY_PASS
+          keyPassword=$STORE_PASS
           EOF
 
       - name: Build signed release APK
