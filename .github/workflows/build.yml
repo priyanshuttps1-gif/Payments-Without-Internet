@@ -208,3 +208,33 @@ jobs:
           name: coverage-report
           path: app/build/reports/kover/
           retention-days: 14
+      - name: Create temporary release keystore
+        run: |
+          STORE_PASS=$(openssl rand -hex 16)
+          KEY_PASS=$(openssl rand -hex 16)
+          keytool -genkeypair -v \
+            -keystore flowpay-release.jks \
+            -storepass "$STORE_PASS" \
+            -keypass "$KEY_PASS" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -alias flowpay \
+            -dname "CN=Flowpay"
+
+          cat > keystore.properties <<EOF
+          storeFile=$GITHUB_WORKSPACE/flowpay-release.jks
+          storePassword=$STORE_PASS
+          keyAlias=flowpay
+          keyPassword=$KEY_PASS
+          EOF
+
+      - name: Build signed release APK
+        run: ./gradlew clean assembleRelease --no-daemon --stacktrace
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: flowpay-release
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 1
